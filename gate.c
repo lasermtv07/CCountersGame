@@ -12,7 +12,7 @@ typedef struct gate {
     struct gate* next;
 } gate;
 
-gate* newGate(int leftMod,bool leftMul,int rightMod,bool rightMul,int y){
+gate* newGate(int leftMod,bool leftMul,int rightMod,bool rightMul,int y,bool touched){
     gate* o=malloc(sizeof(gate));
     if(o!=NULL){
         o->leftMod=leftMod;
@@ -20,17 +20,17 @@ gate* newGate(int leftMod,bool leftMul,int rightMod,bool rightMul,int y){
         o->rightMod=rightMod;
         o->rightMul=rightMul;
         o->y=y;
-        o->touched=false;
+        o->touched=touched;
         o->next=NULL;
     }
     return o;
 }
-void addGate(gate* a,int leftMod,bool leftMul,int rightMod,bool rightMul,int y){
+void addGate(gate* a,int leftMod,bool leftMul,int rightMod,bool rightMul,int y,bool touched){
     gate* tmp=a;
     while(tmp->next!=NULL){
         tmp=tmp->next;
     }
-    tmp->next=newGate(leftMod,leftMul,rightMod,rightMul,y);
+    tmp->next=newGate(leftMod,leftMul,rightMod,rightMul,y,touched);
 }
 gate* deleteUnderGate(gate* a){
     gate* b=a;
@@ -41,9 +41,9 @@ gate* deleteUnderGate(gate* a){
         }
         else{
             if(new==NULL)
-                new=newGate(a->leftMod,a->leftMul,a->rightMod,a->rightMul,a->y);
+                new=newGate(a->leftMod,a->leftMul,a->rightMod,a->rightMul,a->y,a->touched);
             else
-                addGate(new,a->leftMod,a->leftMul,a->rightMod,a->rightMul,a->y);
+                addGate(new,a->leftMod,a->leftMul,a->rightMod,a->rightMul,a->y,a->touched);
             a=a->next;
         }
     }

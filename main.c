@@ -27,10 +27,18 @@ int main(){
     SDL_Surface* plS=IMG_Load("gfx/player.png");
     SDL_Texture* pl=SDL_CreateTextureFromSurface(rend,plS);
     SDL_FreeSurface(plS);
-    SDL_Rect plSz={w:50,h:80,x:50,y:460};
-    int plC=16;
+    SDL_Rect plSz={w:40,h:70,x:150,y:460};
+    int plC=1;
+
+    SDL_Surface* gateS=IMG_Load("gfx/gates.png");
+    SDL_Texture* gateZ=SDL_CreateTextureFromSurface(rend,gateS);
+    SDL_FreeSurface(gateS);
+
+    gate* a=newGate(6,true,14,false,100,false);
+    addGate(a,2,false,11,false,300,false);
+
     TTF_Init();
-    TTF_Font *font=TTF_OpenFont("comicsans.ttf",40);
+    TTF_Font *font=TTF_OpenFont("comicsans.ttf",15);
     if (!font){
         printf("font load error: %s\n",TTF_GetError());
         return 1;
@@ -40,28 +48,75 @@ int main(){
     while(1){
         int mX;
         SDL_GetMouseState(&mX,NULL);
-        printf("%d\n",mX);
         SDL_Event event;
         if(mX-2>plSz.x && plSz.x<580-50-150)
             plSz.x+=3;
         else if(mX+2<plSz.x && plSz.x>150)
             plSz.x-=3;
-        SDL_Rect coords={x:100,y:100,w:100,h:100};
+        SDL_Rect coords={x:100,y:100,w:30,h:20};
         SDL_RenderCopy(rend,text,NULL,&coords);
         SDL_RenderCopy(rend,pl,NULL,&plSz);
-        SDL_Rect shifted={w:50,h:80,x:plSz.x,y:plSz.y};
+        SDL_Rect shifted={w:plSz.w,h:plSz.h,x:plSz.x,y:plSz.y};
         int tmp=plC-1;
-        for(int j=1;j<3;j++){
-            for(float i=0;i<2*M_PI;i+=M_PI/3*j){
+        for(int j=1;j<3+1;j++){
+            for(float i=0;i<2*M_PI;i+=M_PI/(3*j)){
                 if(tmp>0){
-                    shifted.x=(int)plSz.x+30*j*sin(i);
-                    shifted.y=(int)plSz.y+30*j*cos(i);
+                    shifted.x=(int)plSz.x+25*j*sin(2*M_PI-i);
+                    shifted.y=(int)plSz.y+25*j*cos(2*M_PI-i);
                     SDL_RenderCopy(rend,pl,NULL,&shifted);
                     tmp-=1;
                 }
             }
         }
+        
+        gate* b=a;
+        while(b!=NULL){
+            char* string1=malloc(1024);
+            strncpy(string1,"",1024);
+            if(b->leftMul)
+                sprintf(string1,"x%d",b->leftMod);
+            else
+                sprintf(string1,"+%d",b->leftMod);
+            SDL_Surface* tmp1S=TTF_RenderText_Solid(font,string1,(SDL_Color){255,255,255});
+            SDL_Texture* tmp1=SDL_CreateTextureFromSurface(rend,tmp1S);
+            char* string2=malloc(1024);
+            strncpy(string2,"",1024);
+            if(b->rightMul)
+                sprintf(string2,"x%d",b->rightMod);
+            else
+                sprintf(string2,"+%d",b->rightMod);
+            SDL_Surface* tmp2S=TTF_RenderText_Solid(font,string2,(SDL_Color){255,255,255});
+            SDL_Texture* tmp2=SDL_CreateTextureFromSurface(rend,tmp2S);
+            SDL_RenderCopy(rend,gateZ,NULL,&(SDL_Rect){x:150-40,y:b->y,w:350,h:30});
+            SDL_RenderCopy(rend,tmp1,NULL,&(SDL_Rect){x:170,y:b->y+5,h:20,w:10*strlen(string1)});
+            SDL_RenderCopy(rend,tmp2,NULL,&(SDL_Rect){x:170+180,y:b->y+5,h:20,w:18*(strlen(string1)-1)});
+            free(string1);
+            free(string2);
+            SDL_FreeSurface(tmp1S);
+            SDL_FreeSurface(tmp2S);
+            SDL_DestroyTexture(tmp1);
+            SDL_DestroyTexture(tmp2);
 
+            b->y+=2;
+            if(b->y>460 && !b->touched){
+                if(plSz.x<110+175){
+                    if(b->leftMul)
+                        plC*=b->leftMod;
+                    else
+                        plC+=b->leftMod;
+                }
+                else {
+                    printf("touched right\n");
+                    if(b->rightMul)
+                        plC*=b->rightMod;
+                    else
+                        plC+=b->rightMod;
+                }
+                b->touched=true;
+            }
+            b=b->next;
+        }
+        a=deleteUnderGate(a);
         SDL_RenderPresent(rend);
 
         while(SDL_PollEvent(&event)){
