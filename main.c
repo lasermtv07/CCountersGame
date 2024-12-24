@@ -7,6 +7,7 @@
 #define M_PI 3.14159265358979323846
 #include <math.h>
 #include "gate.c"
+#include "obstacle.c"
 
 int main(){
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)){
@@ -34,8 +35,14 @@ int main(){
     SDL_Texture* gateZ=SDL_CreateTextureFromSurface(rend,gateS);
     SDL_FreeSurface(gateS);
 
+    SDL_Surface* obstacleS=IMG_Load("gfx/obstacle.png");
+    SDL_Texture* obstacleZ=SDL_CreateTextureFromSurface(rend,obstacleS);
+
     gate* a=newGate(6,true,14,false,100,false);
     addGate(a,2,false,11,false,300,false);
+
+    obstacle* o=newObstacle(false,300,150);
+    addObstacle(o,false,300,350);
 
     TTF_Init();
     TTF_Font *font=TTF_OpenFont("comicsans.ttf",15);
@@ -51,7 +58,7 @@ int main(){
         SDL_Event event;
         if(mX-2>plSz.x && plSz.x<580-50-150)
             plSz.x+=3;
-        else if(mX+2<plSz.x && plSz.x>150)
+        else if(mX+2<plSz.x && plSz.x>180)
             plSz.x-=3;
         SDL_Rect coords={x:100,y:100,w:30,h:20};
         SDL_RenderCopy(rend,text,NULL,&coords);
@@ -61,8 +68,10 @@ int main(){
         for(int j=1;j<3+1;j++){
             for(float i=0;i<2*M_PI;i+=M_PI/(3*j)){
                 if(tmp>0){
+
                     shifted.x=(int)plSz.x+25*j*sin(2*M_PI-i);
                     shifted.y=(int)plSz.y+25*j*cos(2*M_PI-i);
+
                     SDL_RenderCopy(rend,pl,NULL,&shifted);
                     tmp-=1;
                 }
@@ -116,7 +125,16 @@ int main(){
             }
             b=b->next;
         }
+        obstacle* p=o;
+        while(p!=NULL){
+            if(!p->type){
+                SDL_RenderCopy(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50});
+            }
+            p->y+=2;
+            p=p->next;
+        }
         a=deleteUnderGate(a);
+        o=deleteUnderObstacle(o);
         SDL_RenderPresent(rend);
 
         while(SDL_PollEvent(&event)){
