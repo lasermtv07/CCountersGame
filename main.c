@@ -8,6 +8,7 @@
 #include <math.h>
 #include "gate.c"
 #include "obstacle.c"
+#include "players.c"
 
 int main(){
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)){
@@ -44,6 +45,7 @@ int main(){
     obstacle* o=newObstacle(false,300,150);
     addObstacle(o,false,300,350);
 
+    player* z=newPlayer(0,0,false);
     TTF_Init();
     TTF_Font *font=TTF_OpenFont("comicsans.ttf",15);
     if (!font){
@@ -65,7 +67,7 @@ int main(){
         SDL_RenderCopy(rend,pl,NULL,&plSz);
         SDL_Rect shifted={w:plSz.w,h:plSz.h,x:plSz.x,y:plSz.y};
         int tmp=plC-1;
-        for(int j=1;j<3+1;j++){
+        /*for(int j=1;j<3+1;j++){
             for(float i=0;i<2*M_PI;i+=M_PI/(3*j)){
                 if(tmp>0){
 
@@ -76,8 +78,13 @@ int main(){
                     tmp-=1;
                 }
             }
+        }*/
+        player* zz=z;
+        while(zz!=NULL){
+            if(zz->d)
+                SDL_RenderCopy(rend,pl,NULL,&(SDL_Rect){w:plSz.w,h:plSz.h,x:plSz.x+zz->offX,y:plSz.y+zz->offY});
+            zz=zz->next;
         }
-        
         gate* b=a;
         while(b!=NULL){
             char* string1=malloc(1024);
@@ -109,17 +116,32 @@ int main(){
             b->y+=2;
             if(b->y>460 && !b->touched){
                 if(plSz.x<110+175){
-                    if(b->leftMul)
-                        plC*=b->leftMod;
-                    else
-                        plC+=b->leftMod;
+                    if(b->leftMul){
+                        int oTmp=countPlayer(z);
+                        for(int i=0;i<b->leftMod-1;i++){
+                            for(int j=0;j<oTmp;j++)
+                                addPlayer(z);
+                        }
+                        printf("%d\n",countPlayer(z));
+                    }
+                    else {
+                        for(int i=0;i<b->leftMod;i++)
+                            addPlayer(z);
+                    }
                 }
                 else {
                     printf("touched right\n");
-                    if(b->rightMul)
-                        plC*=b->rightMod;
-                    else
-                        plC+=b->rightMod;
+                    if(b->rightMul){
+                        int oTmp=countPlayer(z);
+                        for(int i=0;i<b->rightMod-1;i++){
+                            for(int j=0;j<oTmp;j++)
+                                addPlayer(z);
+                        }
+                    }
+                    else{
+                        for(int i=0;i<b->rightMod;i++)
+                        addPlayer(z);
+                    }
                 }
                 b->touched=true;
             }
