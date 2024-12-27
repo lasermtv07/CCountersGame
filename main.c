@@ -9,7 +9,12 @@
 #include "gate.c"
 #include "obstacle.c"
 #include "players.c"
-
+float floatAbs(float a){
+    if(a<0)
+        return a*-1;
+    else
+        return a;
+}
 int main(){
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)){
         printf("error\n");
@@ -42,10 +47,11 @@ int main(){
     gate* a=newGate(6,true,14,false,100,false);
     addGate(a,2,false,11,false,300,false);
 
-    obstacle* o=newObstacle(false,300,150);
-    addObstacle(o,false,300,350);
+    obstacle* o=newObstacle(true,300,-50);
+    o->next=NULL;
+    //addObstacle(o,true,300,-50);
 
-    player* z=newPlayer(0,0,false);
+    player* z=newPlayer(0,0,true);
     TTF_Init();
     TTF_Font *font=TTF_OpenFont("comicsans.ttf",15);
     if (!font){
@@ -64,25 +70,44 @@ int main(){
             plSz.x-=3;
         SDL_Rect coords={x:100,y:100,w:30,h:20};
         SDL_RenderCopy(rend,text,NULL,&coords);
-        SDL_RenderCopy(rend,pl,NULL,&plSz);
+        //SDL_RenderCopy(rend,pl,NULL,&plSz);
         SDL_Rect shifted={w:plSz.w,h:plSz.h,x:plSz.x,y:plSz.y};
         int tmp=plC-1;
-        /*for(int j=1;j<3+1;j++){
-            for(float i=0;i<2*M_PI;i+=M_PI/(3*j)){
-                if(tmp>0){
-
-                    shifted.x=(int)plSz.x+25*j*sin(2*M_PI-i);
-                    shifted.y=(int)plSz.y+25*j*cos(2*M_PI-i);
-
-                    SDL_RenderCopy(rend,pl,NULL,&shifted);
-                    tmp-=1;
-                }
-            }
-        }*/
         player* zz=z;
         while(zz!=NULL){
             if(zz->d)
                 SDL_RenderCopy(rend,pl,NULL,&(SDL_Rect){w:plSz.w,h:plSz.h,x:plSz.x+zz->offX,y:plSz.y+zz->offY});
+            int pX=plSz.x+zz->offX;
+            int pY=plSz.y+zz->offY;
+            obstacle* qq=o;
+            while(qq!=NULL){
+                int oX=qq->x;
+                int oY=qq->y;
+                if(!qq->type || qq->deg==0){
+                    if(pX+plSz.w>oX && pX<oX+150){
+                        if(pY+plSz.h>oY && pY<oY+50)
+                            zz->d=false;
+                    }
+                }
+                else {
+                    printf("%f\n",sin(qq->deg));
+
+                    /*float slope=(farY-orY)/(farX-oX);
+                    float intercept=orY-slope*oX;
+
+                    if(pX>oX&& pX<farY){
+                        printf("DETECT\n");
+                        if(pY>(intercept-25+pX*slope) && pY<(25+intercept+pX*slope))
+                        zz->d=false;
+                    }*/
+                    SDL_SetRenderDrawColor(rend,0,255,0,255);
+                    SDL_RenderDrawRect(rend,&(SDL_Rect){x:orX,y:orY,w:farX-orX,h:farY-orY});
+                    SDL_SetRenderDrawColor(rend,0,0,0,255);
+                    break;
+
+                }
+                qq=qq->next;
+            }
             zz=zz->next;
         }
         gate* b=a;
@@ -152,12 +177,20 @@ int main(){
             if(!p->type){
                 SDL_RenderCopy(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50});
             }
+            else {
+                SDL_RenderCopyEx(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50},p->deg,&(SDL_Point){x:75,y:25},false);
+                p->deg+=1;
+                p->deg=(int)p->deg%360;
+            }
             p->y+=2;
             p=p->next;
         }
         a=deleteUnderGate(a);
         o=deleteUnderObstacle(o);
+        deletePlayer(z);
         SDL_RenderPresent(rend);
+        if(z->d==false && z->next==NULL)
+            printf("PLAYER LOST\n");
 
         while(SDL_PollEvent(&event)){
             if(event.type==SDL_QUIT){

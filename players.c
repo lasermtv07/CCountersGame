@@ -49,3 +49,14 @@ void addPlayer(player* a){
     a->next=newPlayer((int) ring*18*sin(newC2*((2*3.1415926)/24)),(int) ring*18*cos(newC2*((2*3.1415926)/24)),true);
     return;
 }
+void deletePlayer(player* a){
+    while(a->next!=NULL){
+        if(!(a->next)->d){
+            player* b=(a->next)->next;
+            free(a->next);
+            a->next=b;
+        }
+        else
+            a=a->next;
+    }
+}
