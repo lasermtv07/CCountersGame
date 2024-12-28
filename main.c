@@ -47,7 +47,7 @@ int main(){
     gate* a=newGate(6,true,14,false,100,false);
     addGate(a,2,false,11,false,300,false);
 
-    obstacle* o=newObstacle(true,300,-50);
+    obstacle* o=newObstacle(true,100,-50);
     o->next=NULL;
     //addObstacle(o,true,300,-50);
 
@@ -83,26 +83,68 @@ int main(){
             while(qq!=NULL){
                 int oX=qq->x;
                 int oY=qq->y;
-                if(!qq->type || qq->deg==0){
+                if(!qq->type || qq->deg==0 || qq->deg==270){
                     if(pX+plSz.w>oX && pX<oX+150){
                         if(pY+plSz.h>oY && pY<oY+50)
                             zz->d=false;
                     }
                 }
                 else {
-                    printf("%f\n",sin(qq->deg));
+                    float deg=((qq->deg)/180)*M_PI;
+                    float orX=oX+75-75*cos(2*M_PI-deg);
+                    float orY=oY+75*sin(2*M_PI-deg);
+                    float orxY=oY+75*sin(2*M_PI-deg+atan(2/3));
+                    float farX=oX+75+75*cos(2*M_PI-deg);
+                    float farY=oY-75*sin(2*M_PI-deg);
+                    float slope=(farY-orY)/(farX-orX);
+                    float intercept=orY-slope*orX;
+                    float intercept2=(orY+50/cos(2*M_PI-deg))-slope*orX;
 
-                    /*float slope=(farY-orY)/(farX-oX);
-                    float intercept=orY-slope*oX;
+                    //SDL_SetRenderDrawColor(rend,0,255,0,255);
+                    float smallerX;
+                    float biggerX;
+                    if(orX>farX){
+                        smallerX=farX;
+                        biggerX=orX;
+                    } else {
+                        smallerX=farX;
+                        biggerX=orX;           
+                    }
 
-                    if(pX>oX&& pX<farY){
-                        printf("DETECT\n");
-                        if(pY>(intercept-25+pX*slope) && pY<(25+intercept+pX*slope))
-                        zz->d=false;
-                    }*/
-                    SDL_SetRenderDrawColor(rend,0,255,0,255);
-                    SDL_RenderDrawRect(rend,&(SDL_Rect){x:orX,y:orY,w:farX-orX,h:farY-orY});
-                    SDL_SetRenderDrawColor(rend,0,0,0,255);
+                    float smallerY;
+                    if(farY>orY){
+                        smallerY=orY;
+                    } else {
+                        smallerY=farY;
+                    }
+                    float bottomEdge=smallerY+floatAbs(150*sin(2*M_PI-deg));
+                    float smallerIntercept;
+                    float largerIntercept;
+                    if(intercept>intercept2){
+                        smallerIntercept=intercept2;
+                        largerIntercept=intercept;
+                    } else {
+                        smallerIntercept=intercept;
+                        largerIntercept=intercept2;
+                    }
+                    if(pX+plSz.w>smallerX && pX<biggerX){
+                        /*SDL_RenderDrawLine(rend,pX,0,pX,1000);
+                        SDL_RenderDrawRect(rend,&(SDL_Rect){x:pX,y:(int)(smallerIntercept+pX*slope),w:10,h:10});
+                        SDL_RenderDrawRect(rend,&(SDL_Rect){x:pX,y:(int)(largerIntercept+pX*slope),w:10,h:10});*/
+                        if((pY>(smallerIntercept+pX*slope) && pY<(largerIntercept+pX*slope))){
+                            if(pY+50>smallerY && pY<bottomEdge){
+                                zz->d=false;
+                                printf("DELETED\n");
+                            }
+                        }
+                    }
+                    /*SDL_RenderDrawLine(rend,0,intercept,1000,intercept+1000*slope);
+                    SDL_SetRenderDrawColor(rend,255,0,0,255);
+                    SDL_RenderDrawLine(rend,0,intercept2,1000,intercept2+1000*slope);
+                    SDL_RenderDrawLine(rend,0,smallerY,1000,smallerY);
+                    SDL_SetRenderDrawColor(rend,0,0,255,255);
+                    SDL_RenderDrawLine(rend,0,bottomEdge,1000,bottomEdge);
+                    SDL_SetRenderDrawColor(rend,0,0,0,255);*/
                     break;
 
                 }
@@ -178,9 +220,10 @@ int main(){
                 SDL_RenderCopy(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50});
             }
             else {
-                SDL_RenderCopyEx(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50},p->deg,&(SDL_Point){x:75,y:25},false);
+                SDL_RenderCopyEx(rend,obstacleZ,NULL,&(SDL_Rect){x:p->x,y:p->y,w:150,h:50},p->deg,&(SDL_Point){x:75,y:0},false);
                 p->deg+=1;
                 p->deg=(int)p->deg%360;
+
             }
             p->y+=2;
             p=p->next;
