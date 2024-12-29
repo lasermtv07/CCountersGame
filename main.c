@@ -4,17 +4,13 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #define M_PI 3.14159265358979323846
 #include <math.h>
 #include "gate.c"
 #include "obstacle.c"
 #include "players.c"
-float floatAbs(float a){
-    if(a<0)
-        return a*-1;
-    else
-        return a;
-}
+
 int main(){
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)){
         printf("error\n");
@@ -48,8 +44,7 @@ int main(){
     addGate(a,2,false,11,false,300,false);
 
     obstacle* o=newObstacle(true,100,-50);
-    o->next=NULL;
-    //addObstacle(o,true,300,-50);
+    //addObstacle(o,true,300,-150);
 
     player* z=newPlayer(0,0,true);
     TTF_Init();
@@ -93,59 +88,39 @@ int main(){
                     float deg=((qq->deg)/180)*M_PI;
                     float orX=oX+75-75*cos(2*M_PI-deg);
                     float orY=oY+75*sin(2*M_PI-deg);
-                    float orxY=oY+75*sin(2*M_PI-deg+atan(2/3));
                     float farX=oX+75+75*cos(2*M_PI-deg);
                     float farY=oY-75*sin(2*M_PI-deg);
-                    float slope=(farY-orY)/(farX-orX);
-                    float intercept=orY-slope*orX;
-                    float intercept2=(orY+50/cos(2*M_PI-deg))-slope*orX;
+                    float bottomY=oY-75*sin(deg)+50*cos(deg);
+                    float bottomY2=oY+75*sin(deg)+50*cos(deg);
+                    float bottomX=oX+75-75*cos(deg)-50*sin(deg);
+                    float bottomX2=oX+75+75*cos(deg)-50*sin(deg);
 
-                    //SDL_SetRenderDrawColor(rend,0,255,0,255);
-                    float smallerX;
-                    float biggerX;
-                    if(orX>farX){
-                        smallerX=farX;
-                        biggerX=orX;
-                    } else {
-                        smallerX=farX;
-                        biggerX=orX;           
+                    SDL_Rect pRect={x:pX,y:pY,w:plSz.w,h:plSz.h};
+                    for(int i=0;i<30;i++){
+                        SDL_Rect* l1=malloc(sizeof(SDL_Rect));
+                        l1->w=2;
+                        l1->h=2;
+                        l1->x=orX+(150-i*5)*cos(deg);
+                        l1->y=(int) orY+(150-i*5)*sin(deg);
+                        SDL_SetRenderDrawColor(rend,0,255,0,255);
+                        SDL_RenderDrawRect(rend,l1);
+                        if(SDL_HasIntersection(l1,&pRect))
+                            zz->d=false;
+                        free(l1);
+                    }
+                    for(int i=0;i<30;i++){
+                        SDL_Rect* l1=malloc(sizeof(SDL_Rect));
+                        l1->w=2;
+                        l1->h=2;
+                        l1->x=orX+(150-i*5)*cos(deg)-50*sin(deg);
+                        l1->y=(int) orY+(150-i*5)*sin(deg)+50*cos(deg);
+                        SDL_SetRenderDrawColor(rend,0,255,0,255);
+                        SDL_RenderDrawRect(rend,l1);
+                        if(SDL_HasIntersection(l1,&pRect))
+                            zz->d=false;
                     }
 
-                    float smallerY;
-                    if(farY>orY){
-                        smallerY=orY;
-                    } else {
-                        smallerY=farY;
-                    }
-                    float bottomEdge=smallerY+floatAbs(150*sin(2*M_PI-deg));
-                    float smallerIntercept;
-                    float largerIntercept;
-                    if(intercept>intercept2){
-                        smallerIntercept=intercept2;
-                        largerIntercept=intercept;
-                    } else {
-                        smallerIntercept=intercept;
-                        largerIntercept=intercept2;
-                    }
-                    if(pX+plSz.w>smallerX && pX<biggerX){
-                        /*SDL_RenderDrawLine(rend,pX,0,pX,1000);
-                        SDL_RenderDrawRect(rend,&(SDL_Rect){x:pX,y:(int)(smallerIntercept+pX*slope),w:10,h:10});
-                        SDL_RenderDrawRect(rend,&(SDL_Rect){x:pX,y:(int)(largerIntercept+pX*slope),w:10,h:10});*/
-                        if((pY>(smallerIntercept+pX*slope) && pY<(largerIntercept+pX*slope))){
-                            if(pY+50>smallerY && pY<bottomEdge){
-                                zz->d=false;
-                                printf("DELETED\n");
-                            }
-                        }
-                    }
-                    /*SDL_RenderDrawLine(rend,0,intercept,1000,intercept+1000*slope);
-                    SDL_SetRenderDrawColor(rend,255,0,0,255);
-                    SDL_RenderDrawLine(rend,0,intercept2,1000,intercept2+1000*slope);
-                    SDL_RenderDrawLine(rend,0,smallerY,1000,smallerY);
-                    SDL_SetRenderDrawColor(rend,0,0,255,255);
-                    SDL_RenderDrawLine(rend,0,bottomEdge,1000,bottomEdge);
-                    SDL_SetRenderDrawColor(rend,0,0,0,255);*/
-                    break;
+                    SDL_SetRenderDrawColor(rend,0,0,0,255);
 
                 }
                 qq=qq->next;
