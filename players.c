@@ -60,3 +60,23 @@ void deletePlayer(player* a){
             a=a->next;
     }
 }
+void sortPlayer(player* a){
+    if(a==NULL)
+        return;
+    player* tmp1=a;
+    while(tmp1->next!=NULL){
+        player* tmp2=a;
+        while(tmp2->next!=NULL){
+            if(tmp2->offY>(tmp2->next)->offY){
+                int t1=tmp2->offY;
+                tmp2->offY=(tmp2->next)->offY;
+                (tmp2->next)->offY=t1;
+                int t2=tmp2->offX;
+                tmp2->offX=(tmp2->next)->offX;
+                (tmp2->next)->offX=t2;
+            }
+            tmp2=tmp2->next;
+        }
+        tmp1=tmp1->next;
+    }
+}

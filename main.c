@@ -30,7 +30,7 @@ int main(){
     SDL_Surface* plS=IMG_Load("gfx/player.png");
     SDL_Texture* pl=SDL_CreateTextureFromSurface(rend,plS);
     SDL_FreeSurface(plS);
-    SDL_Rect plSz={w:40,h:70,x:150,y:460};
+    SDL_Rect plSz={w:60,h:90,x:150,y:460};
     int plC=1;
 
     SDL_Surface* gateS=IMG_Load("gfx/gates.png");
@@ -44,7 +44,7 @@ int main(){
     addGate(a,2,false,11,false,300,false);
 
     obstacle* o=newObstacle(true,100,-50);
-    //addObstacle(o,true,300,-150);
+    addObstacle(o,true,300,-150);
 
     player* z=newPlayer(0,0,true);
     TTF_Init();
@@ -55,7 +55,26 @@ int main(){
     }
     SDL_Surface* textS=TTF_RenderText_Solid(font,"uwu",(SDL_Color){255,0,0});
     SDL_Texture* text=SDL_CreateTextureFromSurface(rend,textS);
+    int screenShift=0;
     while(1){
+        for(int i=0;i<9;i++){
+            for(int j=0;j<6;j++){
+                SDL_Rect sqer={w:116,h:116,x:116*j,y:640-116*i+screenShift};
+                if(i%2==0){
+                    if(j%2==0)
+                        SDL_SetRenderDrawColor(rend,140,207,0,255);
+                    else
+                        SDL_SetRenderDrawColor(rend,92,189,0,255);
+                } else {
+                     if(j%2==1)
+                        SDL_SetRenderDrawColor(rend,140,207,0,255);
+                    else
+                        SDL_SetRenderDrawColor(rend,92,189,0,255);                   
+                }
+                SDL_RenderFillRect(rend,&sqer);
+            }
+        }
+        SDL_SetRenderDrawColor(rend,0,0,0,255);
         int mX;
         SDL_GetMouseState(&mX,NULL);
         SDL_Event event;
@@ -69,6 +88,7 @@ int main(){
         SDL_Rect shifted={w:plSz.w,h:plSz.h,x:plSz.x,y:plSz.y};
         int tmp=plC-1;
         player* zz=z;
+        sortPlayer(zz);
         while(zz!=NULL){
             if(zz->d)
                 SDL_RenderCopy(rend,pl,NULL,&(SDL_Rect){w:plSz.w,h:plSz.h,x:plSz.x+zz->offX,y:plSz.y+zz->offY});
@@ -102,8 +122,8 @@ int main(){
                         l1->h=2;
                         l1->x=orX+(150-i*5)*cos(deg);
                         l1->y=(int) orY+(150-i*5)*sin(deg);
-                        SDL_SetRenderDrawColor(rend,0,255,0,255);
-                        SDL_RenderDrawRect(rend,l1);
+                        //SDL_SetRenderDrawColor(rend,0,255,0,255);
+                        //SDL_RenderDrawRect(rend,l1);
                         if(SDL_HasIntersection(l1,&pRect))
                             zz->d=false;
                         free(l1);
@@ -114,8 +134,8 @@ int main(){
                         l1->h=2;
                         l1->x=orX+(150-i*5)*cos(deg)-50*sin(deg);
                         l1->y=(int) orY+(150-i*5)*sin(deg)+50*cos(deg);
-                        SDL_SetRenderDrawColor(rend,0,255,0,255);
-                        SDL_RenderDrawRect(rend,l1);
+                        //SDL_SetRenderDrawColor(rend,0,255,0,255);
+                        //SDL_RenderDrawRect(rend,l1);
                         if(SDL_HasIntersection(l1,&pRect))
                             zz->d=false;
                     }
@@ -135,7 +155,7 @@ int main(){
                 sprintf(string1,"x%d",b->leftMod);
             else
                 sprintf(string1,"+%d",b->leftMod);
-            SDL_Surface* tmp1S=TTF_RenderText_Solid(font,string1,(SDL_Color){255,255,255});
+            SDL_Surface* tmp1S=TTF_RenderText_Solid(font,string1,(SDL_Color){0,0,0});
             SDL_Texture* tmp1=SDL_CreateTextureFromSurface(rend,tmp1S);
             char* string2=malloc(1024);
             strncpy(string2,"",1024);
@@ -143,11 +163,11 @@ int main(){
                 sprintf(string2,"x%d",b->rightMod);
             else
                 sprintf(string2,"+%d",b->rightMod);
-            SDL_Surface* tmp2S=TTF_RenderText_Solid(font,string2,(SDL_Color){255,255,255});
+            SDL_Surface* tmp2S=TTF_RenderText_Solid(font,string2,(SDL_Color){0,0,0});
             SDL_Texture* tmp2=SDL_CreateTextureFromSurface(rend,tmp2S);
-            SDL_RenderCopy(rend,gateZ,NULL,&(SDL_Rect){x:150-40,y:b->y,w:350,h:30});
-            SDL_RenderCopy(rend,tmp1,NULL,&(SDL_Rect){x:170,y:b->y+5,h:20,w:10*strlen(string1)});
-            SDL_RenderCopy(rend,tmp2,NULL,&(SDL_Rect){x:170+180,y:b->y+5,h:20,w:18*(strlen(string1)-1)});
+            SDL_RenderCopy(rend,gateZ,NULL,&(SDL_Rect){x:2,y:b->y,w:578,h:72});
+            SDL_RenderCopy(rend,tmp1,NULL,&(SDL_Rect){x:140,y:b->y+16,h:30,w:15*strlen(string1)});
+            SDL_RenderCopy(rend,tmp2,NULL,&(SDL_Rect){x:140+280,y:b->y+16,h:30,w:15*(strlen(string1))});
             free(string1);
             free(string2);
             SDL_FreeSurface(tmp1S);
@@ -156,8 +176,8 @@ int main(){
             SDL_DestroyTexture(tmp2);
 
             b->y+=2;
-            if(b->y>460 && !b->touched){
-                if(plSz.x<110+175){
+            if(b->y>450 && !b->touched){
+                if(plSz.x<270){
                     if(b->leftMul){
                         int oTmp=countPlayer(z);
                         for(int i=0;i<b->leftMod-1;i++){
@@ -217,6 +237,8 @@ int main(){
                 return 0;
             }
         }
+        screenShift+=2;
+        screenShift=screenShift%(116*2);
         SDL_RenderClear(rend);
         SDL_Delay(1000/60);
     }
