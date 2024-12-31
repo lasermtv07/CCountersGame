@@ -43,8 +43,8 @@ int main(){
     gate* a=newGate(6,true,14,false,100,false);
     addGate(a,2,false,11,false,300,false);
 
-    obstacle* o=newObstacle(true,100,-50);
-    addObstacle(o,true,300,-150);
+    obstacle* o=newObstacle(false,100,-50);
+    addObstacle(o,true,400,-150);
 
     player* z=newPlayer(0,0,true);
     TTF_Init();
@@ -56,7 +56,9 @@ int main(){
     SDL_Surface* textS=TTF_RenderText_Solid(font,"uwu",(SDL_Color){255,0,0});
     SDL_Texture* text=SDL_CreateTextureFromSurface(rend,textS);
     int screenShift=0;
+    int level=1;
     while(1){
+
         for(int i=0;i<9;i++){
             for(int j=0;j<6;j++){
                 SDL_Rect sqer={w:116,h:116,x:116*j,y:640-116*i+screenShift};
@@ -78,9 +80,9 @@ int main(){
         int mX;
         SDL_GetMouseState(&mX,NULL);
         SDL_Event event;
-        if(mX-2>plSz.x && plSz.x<580-50-150)
+        if(mX-2>plSz.x && plSz.x<580)
             plSz.x+=3;
-        else if(mX+2<plSz.x && plSz.x>180)
+        else if(mX+2<plSz.x && plSz.x>0)
             plSz.x-=3;
         SDL_Rect coords={x:100,y:100,w:30,h:20};
         SDL_RenderCopy(rend,text,NULL,&coords);
@@ -89,6 +91,10 @@ int main(){
         int tmp=plC-1;
         player* zz=z;
         sortPlayer(zz);
+        player* closestPlayer=zz;
+        //player* tmpZ
+
+        player* firstPlayer=zz;
         while(zz!=NULL){
             if(zz->d)
                 SDL_RenderCopy(rend,pl,NULL,&(SDL_Rect){w:plSz.w,h:plSz.h,x:plSz.x+zz->offX,y:plSz.y+zz->offY});
@@ -138,6 +144,7 @@ int main(){
                         //SDL_RenderDrawRect(rend,l1);
                         if(SDL_HasIntersection(l1,&pRect))
                             zz->d=false;
+                        free(l1);
                     }
 
                     SDL_SetRenderDrawColor(rend,0,0,0,255);
@@ -176,8 +183,8 @@ int main(){
             SDL_DestroyTexture(tmp2);
 
             b->y+=2;
-            if(b->y>450 && !b->touched){
-                if(plSz.x<270){
+            if(b->y>450+firstPlayer->offY && !b->touched){
+                if(plSz.x+firstPlayer->offX<270){
                     if(b->leftMul){
                         int oTmp=countPlayer(z);
                         for(int i=0;i<b->leftMod-1;i++){
@@ -226,6 +233,93 @@ int main(){
         a=deleteUnderGate(a);
         o=deleteUnderObstacle(o);
         deletePlayer(z);
+
+        SDL_SetRenderDrawColor(rend,0,0,0,180);
+        SDL_SetRenderDrawBlendMode(rend,SDL_BLENDMODE_BLEND);
+        SDL_RenderFillRect(rend,&(SDL_Rect){w:700,h:80,x:0,y:0});
+        char* scoreText=malloc(1024);
+        strncpy(scoreText,"",1024);
+        sprintf(scoreText,"Level: %d",level);
+        SDL_Surface* scoreS=TTF_RenderText_Solid(font,scoreText,(SDL_Color){255,255,255});
+        SDL_Texture* scoreT=SDL_CreateTextureFromSurface(rend,scoreS);
+        SDL_RenderCopy(rend,scoreT,NULL,&(SDL_Rect){x:20,y:20,h:32,w:15*strlen(scoreText)});
+        free(scoreText);
+        SDL_FreeSurface(scoreS);
+        SDL_DestroyTexture(scoreT);
+//TODO finish
+        if(a==NULL && o==NULL){
+            level++;
+            int gateCount=((rand()%2)+1)*level;
+            if(gateCount>100)
+                gateCount=(int) 100+((gateCount-100)*0.5);
+            int yS=-20;
+            for(;gateCount>0;gateCount--){
+                bool leftMul=rand()%2;
+                bool rightMul=rand()%2;
+                int leftMod;
+                int rightMod;
+                if(leftMul)
+                    leftMod=(rand()%4)+1;
+                else
+                    leftMod=(rand()%14)+6;
+                if(rightMul)
+                    rightMod=(rand()%4)+1;
+                else
+                    rightMod=(rand()%14)+6;
+                if(a==NULL)
+                    a=newGate(leftMod,leftMul,rightMod,rightMul,yS,false);
+                else
+                    addGate(a,leftMod,leftMul,rightMod,rightMul,yS,false);
+
+                int preset=rand()%6;
+                if(preset==0){
+                    if(o==NULL)
+                        o=newObstacle(false,((rand()%400)),yS-100);
+                    else
+                        addObstacle(o,false,((rand()%400)),yS-100);
+                }
+                if(preset==1){
+                    if(o==NULL)
+                        o=newObstacle(true,(rand()%400),yS-100);
+                    else
+                        addObstacle(o,true,(rand()%400),yS-100);
+                }
+                if(preset==2){
+                    if(o==NULL)
+                        o=newObstacle(true,(rand()%110),yS-100);
+                    else
+                        addObstacle(o,true,rand()%110,yS-100);
+
+                    addObstacle(o,false,290+rand()%110,yS-100);
+                }
+                if(preset==3){
+                    if(o==NULL)
+                        o=newObstacle(false,(rand()%110),yS-100);
+                    else
+                        addObstacle(o,false,rand()%110,yS-100);
+
+                    addObstacle(o,true,290+rand()%110,yS-100);
+                }
+                if(preset==4){
+                    if(o==NULL)
+                        o=newObstacle(true,(rand()%110),yS-100);
+                    else
+                        addObstacle(o,true,rand()%110,yS-100);
+
+                    addObstacle(o,true,290+rand()%110,yS-100);
+                }
+                if(preset==5){
+                    if(o==NULL)
+                        o=newObstacle(false,(rand()%110),yS-100);
+                    else
+                        addObstacle(o,false,rand()%110,yS-100);
+
+                    addObstacle(o,false,290+rand()%110,yS-100);
+                }
+                yS-=225+(rand()%150);
+            }
+        }
+
         SDL_RenderPresent(rend);
         if(z->d==false && z->next==NULL)
             printf("PLAYER LOST\n");
