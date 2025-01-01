@@ -29,7 +29,8 @@ int countPlayer(player* a){
     return count;
 }
 void addPlayer(player* a){
-
+    if(countPlayer(a)>100)
+        return;
     int count=countPlayer(a);
     while(a->next!=NULL){
         a=a->next;
@@ -78,5 +79,42 @@ void sortPlayer(player* a){
             tmp2=tmp2->next;
         }
         tmp1=tmp1->next;
+    }
+}
+int mostleftXPlayer(player*a){
+    int mostLeft=a->offX;
+    while(a!=NULL){
+        if(a->offX<mostLeft)
+            mostLeft=a->offX;
+        a=a->next;
+    }
+    return mostLeft;
+}
+int mostrightXPlayer(player*a){
+    int mostRight=a->offX;
+    while(a!=NULL){
+        if(a->offX>mostRight)
+            mostRight=a->offX;
+        a=a->next;
+    }
+    return mostRight;
+}
+int topYPlayer(player* a){
+    int top=a->offY;
+    while(a!=NULL){
+        if(a->offY<top)
+            top=a->offY;
+        a=a->next;
+    }
+    return top;
+}
+void redoPlayer(player* a){
+    player* b=a->next;
+    a->next=NULL;
+    while(b!=NULL){
+        addPlayer(a);
+        player *c=b;
+        b=b->next;
+        free(c);
     }
 }

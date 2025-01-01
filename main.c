@@ -49,14 +49,20 @@ int main(){
     player* z=newPlayer(0,0,true);
     TTF_Init();
     TTF_Font *font=TTF_OpenFont("comicsans.ttf",15);
+    TTF_Font *font2=TTF_OpenFont("comicsans.ttf",48);
     if (!font){
         printf("font load error: %s\n",TTF_GetError());
         return 1;
     }
     SDL_Surface* textS=TTF_RenderText_Solid(font,"uwu",(SDL_Color){255,0,0});
     SDL_Texture* text=SDL_CreateTextureFromSurface(rend,textS);
+
+    SDL_Surface* dedS=TTF_RenderText_Solid(font2,"u ded",(SDL_Color){255,0,0});
+    SDL_Texture* ded=SDL_CreateTextureFromSurface(rend,dedS);
+
     int screenShift=0;
     int level=1;
+    int progState=1;
     while(1){
 
         for(int i=0;i<9;i++){
@@ -80,9 +86,9 @@ int main(){
         int mX;
         SDL_GetMouseState(&mX,NULL);
         SDL_Event event;
-        if(mX-2>plSz.x && plSz.x<580)
+        if(mX-2>plSz.x && plSz.x<580-mostrightXPlayer(z))
             plSz.x+=3;
-        else if(mX+2<plSz.x && plSz.x>0)
+        else if(mX+2<plSz.x && plSz.x>mostleftXPlayer(z))
             plSz.x-=3;
         SDL_Rect coords={x:100,y:100,w:30,h:20};
         SDL_RenderCopy(rend,text,NULL,&coords);
@@ -91,11 +97,9 @@ int main(){
         int tmp=plC-1;
         player* zz=z;
         sortPlayer(zz);
-        player* closestPlayer=zz;
-        //player* tmpZ
 
         player* firstPlayer=zz;
-        while(zz!=NULL){
+        while(zz!=NULL && progState==1){
             if(zz->d)
                 SDL_RenderCopy(rend,pl,NULL,&(SDL_Rect){w:plSz.w,h:plSz.h,x:plSz.x+zz->offX,y:plSz.y+zz->offY});
             int pX=plSz.x+zz->offX;
@@ -122,7 +126,7 @@ int main(){
                     float bottomX2=oX+75+75*cos(deg)-50*sin(deg);
 
                     SDL_Rect pRect={x:pX,y:pY,w:plSz.w,h:plSz.h};
-                    for(int i=0;i<30;i++){
+                    for(int i=0;i<30 && qq->y>0;i++){
                         SDL_Rect* l1=malloc(sizeof(SDL_Rect));
                         l1->w=2;
                         l1->h=2;
@@ -134,7 +138,7 @@ int main(){
                             zz->d=false;
                         free(l1);
                     }
-                    for(int i=0;i<30;i++){
+                    for(int i=0;i<30 && qq->y>0;i++){
                         SDL_Rect* l1=malloc(sizeof(SDL_Rect));
                         l1->w=2;
                         l1->h=2;
@@ -181,9 +185,9 @@ int main(){
             SDL_FreeSurface(tmp2S);
             SDL_DestroyTexture(tmp1);
             SDL_DestroyTexture(tmp2);
-
             b->y+=2;
-            if(b->y>450+firstPlayer->offY && !b->touched){
+            if(b->y>plSz.y+topYPlayer(z) && !b->touched){
+                redoPlayer(z);
                 if(plSz.x+firstPlayer->offX<270){
                     if(b->leftMul){
                         int oTmp=countPlayer(z);
@@ -233,19 +237,33 @@ int main(){
         a=deleteUnderGate(a);
         o=deleteUnderObstacle(o);
         deletePlayer(z);
+        printf("%d\n",countPlayer(z));
 
-        SDL_SetRenderDrawColor(rend,0,0,0,180);
-        SDL_SetRenderDrawBlendMode(rend,SDL_BLENDMODE_BLEND);
-        SDL_RenderFillRect(rend,&(SDL_Rect){w:700,h:80,x:0,y:0});
-        char* scoreText=malloc(1024);
-        strncpy(scoreText,"",1024);
-        sprintf(scoreText,"Level: %d",level);
-        SDL_Surface* scoreS=TTF_RenderText_Solid(font,scoreText,(SDL_Color){255,255,255});
-        SDL_Texture* scoreT=SDL_CreateTextureFromSurface(rend,scoreS);
-        SDL_RenderCopy(rend,scoreT,NULL,&(SDL_Rect){x:20,y:20,h:32,w:15*strlen(scoreText)});
-        free(scoreText);
-        SDL_FreeSurface(scoreS);
-        SDL_DestroyTexture(scoreT);
+        if(progState==1){
+            SDL_SetRenderDrawColor(rend,0,0,0,180);
+            SDL_SetRenderDrawBlendMode(rend,SDL_BLENDMODE_BLEND);
+            SDL_RenderFillRect(rend,&(SDL_Rect){w:700,h:80,x:0,y:0});
+            char* scoreText=malloc(1024);
+            strncpy(scoreText,"",1024);
+            sprintf(scoreText,"Level: %d",level);
+            SDL_Surface* scoreS=TTF_RenderText_Solid(font,scoreText,(SDL_Color){255,255,255});
+            SDL_Texture* scoreT=SDL_CreateTextureFromSurface(rend,scoreS);
+            SDL_RenderCopy(rend,scoreT,NULL,&(SDL_Rect){x:20,y:20,h:32,w:15*strlen(scoreText)});
+            free(scoreText);
+            SDL_FreeSurface(scoreS);
+            SDL_DestroyTexture(scoreT);
+
+            char* plCText=malloc(1024);
+            strncpy(plCText,"",1024);
+            sprintf(plCText,"Players: %d",countPlayer(z));
+            SDL_Surface* plCS=TTF_RenderText_Solid(font,plCText,(SDL_Color){255,255,255});
+            SDL_Texture* plCT=SDL_CreateTextureFromSurface(rend,plCS);
+            SDL_RenderCopy(rend,plCT,NULL,&(SDL_Rect){x:400,y:20,h:32,w:15*strlen(plCText)});
+            free(plCText);
+            SDL_FreeSurface(plCS);
+            SDL_DestroyTexture(plCT);
+        }
+
 //TODO finish
         if(a==NULL && o==NULL){
             level++;
@@ -319,16 +337,42 @@ int main(){
                 yS-=225+(rand()%150);
             }
         }
-
+        if(progState==2)
+            SDL_RenderCopy(rend,ded,NULL,&(SDL_Rect){x:180,y:120,h:150,w:250});
         SDL_RenderPresent(rend);
         if(z->d==false && z->next==NULL)
-            printf("PLAYER LOST\n");
+            progState=2;
 
         while(SDL_PollEvent(&event)){
             if(event.type==SDL_QUIT){
                 SDL_DestroyWindow(win);
                 SDL_Quit();
                 return 0;
+            }
+            if(event.type==SDL_MOUSEBUTTONDOWN && progState!=1){
+                while(a!=NULL){
+                    gate* aaqa=a->next;
+                    free(a);
+                    a=aaqa;
+                }
+                while(o!=NULL){
+                    obstacle* on=o->next;
+                    free(o);
+                    o=on;
+                }
+                progState=1;
+                level=1;
+                player* zt=z->next;
+                while(zt!=NULL){
+                    player* ztt=zt->next;
+                    free(zt);
+                    zt=ztt;
+                }
+                z->d=true;
+                a=newGate(6,true,14,false,100,false);
+                addGate(a,2,false,11,false,300,false);
+                o=newObstacle(false,100,-50);
+                addObstacle(o,true,400,-150);
             }
         }
         screenShift+=2;
