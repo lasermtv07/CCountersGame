@@ -2,6 +2,7 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,7 +13,7 @@
 #include "players.c"
 
 int main(){
-    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)){
+    if(SDL_Init(SDL_INIT_VIDEO| SDL_INIT_TIMER | SDL_INIT_AUDIO)){
         printf("error\n");
         return 1;
     }
@@ -59,6 +60,13 @@ int main(){
 
     SDL_Surface* dedS=TTF_RenderText_Solid(font2,"u ded",(SDL_Color){255,0,0});
     SDL_Texture* ded=SDL_CreateTextureFromSurface(rend,dedS);
+
+    Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,2048);
+    printf("%d\n",Mix_Volume(-1,2));
+    Mix_Music* bg=Mix_LoadMUS("sfx/carefree.mp3");
+    Mix_Chunk* hit=Mix_LoadWAV("sfx/hit.wav");
+    Mix_Chunk* pass=Mix_LoadWAV("sfx/pass.wav");
+    Mix_PlayMusic(bg,-1);
 
     int screenShift=0;
     int level=1;
@@ -110,8 +118,10 @@ int main(){
                 int oY=qq->y;
                 if(!qq->type || qq->deg==0 || qq->deg==270){
                     if(pX+plSz.w>oX && pX<oX+150){
-                        if(pY+plSz.h>oY && pY<oY+50)
+                        if(pY+plSz.h>oY && pY<oY+50){
                             zz->d=false;
+                            Mix_PlayChannel(-1,hit,0);
+                        }
                     }
                 }
                 else {
@@ -134,8 +144,10 @@ int main(){
                         l1->y=(int) orY+(150-i*5)*sin(deg);
                         //SDL_SetRenderDrawColor(rend,0,255,0,255);
                         //SDL_RenderDrawRect(rend,l1);
-                        if(SDL_HasIntersection(l1,&pRect))
+                        if(SDL_HasIntersection(l1,&pRect)){
                             zz->d=false;
+                            Mix_PlayChannel(-1,hit,0);
+                        }
                         free(l1);
                     }
                     for(int i=0;i<30 && qq->y>0;i++){
@@ -187,6 +199,7 @@ int main(){
             SDL_DestroyTexture(tmp2);
             b->y+=2;
             if(b->y>plSz.y+topYPlayer(z) && !b->touched){
+                Mix_PlayChannel(-1,pass,0);
                 redoPlayer(z);
                 if(plSz.x+firstPlayer->offX<270){
                     if(b->leftMul){
@@ -346,6 +359,7 @@ int main(){
         while(SDL_PollEvent(&event)){
             if(event.type==SDL_QUIT){
                 SDL_DestroyWindow(win);
+                Mix_CloseAudio();
                 SDL_Quit();
                 return 0;
             }
